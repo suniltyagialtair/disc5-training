@@ -12,6 +12,8 @@ The delivered model is the **ft2** checkpoint `disc5_arcface_8k_ft2_ep003.pth` (
 ### 1.1 What the system does
 DISC5 **re-identifies individual vessels** from passive-sonar recordings. Given a recording of an unknown contact, it produces a compact acoustic **fingerprint** and matches it against a **gallery** of previously enrolled vessels, returning a ranked shortlist of the most similar known hulls.
 
+![Figure 1 — The core idea (illustrative): two recordings of the same vessel produce near-identical 512-d fingerprints (high cosine); a different vessel does not. Identity is the nearest gallery entry by cosine.](figures/fig1_fingerprint.png)
+
 This is **re-identification**, not classification:
 - The task is to identify the *individual hull* (which specific ship), not the *type* (cargo / tanker / ferry). It must separate two different cargo ships, not merely label both "cargo."
 - It is **open-set**: the answer is "matched vessel X" or "not in the database." Architecturally it is the same family of problem as speaker or face verification.
@@ -78,6 +80,8 @@ The pipeline is a fixed three-step sequence, each step reading the frozen output
 2. **Freeze the split** — the hull-disjoint train/validation split is decided and **written to file before any segmentation** (`disc5_freeze_split.py`), so every downstream step reads the same frozen assignment. (Freezing before segmenting is what guarantees no validation hull can leak into training through a segment or an augmented copy.)
 3. **Segment & augment** — segment into 5 s windows, z-normalise, and (train clips only) write the pre-computed augmented copies (`disc5_segment_augment.py`).
 
+![Figure 3 — The fixed three-step preprocessing pipeline. The hull-disjoint split is frozen before segmentation, closing the augmentation leak path.](figures/fig3_pipeline.png)
+
 ---
 
 ## 4. Augmentation — and why
@@ -102,6 +106,8 @@ Augmentation exists to teach the fingerprint to **ignore the recording condition
 ## 5. Model architecture
 
 A single network, **~4.62 M parameters**, takes the raw z-normalised waveform and produces a 512-d fingerprint. It is a raw-waveform CNN — there is no fixed STFT spectrogram front end.
+
+![Figure 2 — SKANN architecture: four-kernel SK Filterbank, learned fusion, 2-D CNN encoder, 512-d L2-normalised embedding. The ArcFace head exists only during training.](figures/fig2_architecture.png)
 
 **Stage 1 — SK Filterbank (learned multi-resolution front end).**
 Four parallel 1-D convolution branches run over the raw waveform with kernel lengths **127 / 511 / 2047 / 8191** samples (64 channels each). The ladder is biased *long* to resolve the sub-2-kHz tonal band: at 8 kHz these kernels span roughly 16 ms / 64 ms / 256 ms / 1.02 s, giving frequency resolutions of roughly 63 / 16 / 4 / 1 Hz. A short kernel localises in time (broadband cavitation, transients); a long kernel resolves frequency (slow shaft-rate lines). **Selective-kernel attention** then learns, per segment, how to weight the four scales and fuses them into one feature map — the frequency bands are *not* hand-assigned. (Adding 4095/12287/16383 was rejected as crowding the long end near the 40 000-sample segment length; mixing dilated branches into the dense bank was also rejected.)
@@ -166,6 +172,8 @@ The clip is split in half — gallery = first half, query = second half — and 
 | + speed + noise | 0.524 | 0.531 | 0.095 | 0.067 |
 
 The pattern is the story: on clean audio SKANN matches or beats the tonal method; the gap **widens under noise**; and under Doppler the tonal method **collapses** (its absolute line frequencies shift, so line-matching fails) while SKANN's learned invariance largely holds. The two methods have **near-orthogonal failure modes** — where one fails the other often does not — which is why they are shown side by side. A z-score fusion helps on clean/noise but *hurts* under speed, so **fusion is not shipped**; agreement is surfaced instead.
+
+![Figure 4 — NODPAC-21 half-split spot-check, four conditions: rank-1 and open-set AUC, SKANN ft2 vs LOFAR-tonal. Source: disc5_arcface_8k_allbench_compare__ft2.json.](figures/fig4_nodpac21.png)
 
 ### 7.2 IARA validation (real cross-passage, the honest number)
 On real cross-passage queries over held-out IARA hulls (115 queries), the correct vessel is the single top match **less than half the time**, but is usually within the top few:
