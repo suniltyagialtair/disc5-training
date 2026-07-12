@@ -1,0 +1,64 @@
+{
+  "method": "skann",
+  "model": "ep21",
+  "note": "Summary metrics for the base (ep21) checkpoint. Trial-level artifacts are not distributed.",
+  "benchmarks": {
+    "nodpac21": {
+      "protocol": "half-split, 4 conditions, MV_12+13+14 collapse, navy conventions",
+      "conditions": {
+        "clean": {
+          "rank1": 0.9048,
+          "auc": 0.8866
+        },
+        "noise": {
+          "rank1": 0.6667,
+          "auc": 0.6145
+        },
+        "speed": {
+          "rank1": 0.8095,
+          "auc": 0.7188
+        },
+        "speed_noise": {
+          "rank1": 0.4286,
+          "auc": 0.5011
+        }
+      }
+    },
+    "iara_val": {
+      "protocol": "leave-one-passage-out, full gallery, passage=(vessel,session) per D44",
+      "table": {
+        "n_queries": 115,
+        "rank1": 0.4087,
+        "hit5": 0.5652,
+        "hit10": 0.6609,
+        "median_rank_of_genuine": 2.0,
+        "auc": 0.8559,
+        "eer": 0.2174
+      }
+    },
+    "shipsear": {
+      "protocol": "leave-one-passage-out, full gallery, passage=(vessel,session) per D44",
+      "table": {
+        "n_queries": 14,
+        "rank1": 0.0714,
+        "hit5": 0.3571,
+        "hit10": 0.5714,
+        "median_rank_of_genuine": 7.0,
+        "auc": 0.8568,
+        "eer": 0.2147
+      }
+    },
+    "onc_holdout7": {
+      "protocol": "cross-passage, holdout-7 unseen vessels",
+      "table": {
+        "n_queries": 17,
+        "rank1": 0.0588,
+        "hit5": 0.1765,
+        "hit10": 0.1765,
+        "median_rank_of_genuine": 53.0,
+        "auc": 0.5269,
+        "eer": 0.5294
+      }
+    }
+  }
+}
