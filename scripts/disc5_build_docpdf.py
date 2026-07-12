@@ -20,7 +20,16 @@ OUT_PATH = REPO / "DISC5_SKANN_Technical_Documentation.pdf"
 FIG_DIR = REPO / "figures"
 
 # ---- fonts (DejaVu for full glyph coverage: arrows, >=, approx, etc.) ----
-FD = "/usr/share/fonts/truetype/dejavu/"
+# cross-platform DejaVu location: system dir, matplotlib's bundled copy, or Windows fonts
+import os
+_cands = ['/usr/share/fonts/truetype/dejavu/']
+try:
+    import matplotlib
+    _cands.append(os.path.join(matplotlib.get_data_path(), 'fonts', 'ttf') + os.sep)
+except ImportError:
+    pass
+_cands.append('C:\\Windows\\Fonts\\')
+FD = next(d for d in _cands if os.path.isfile(os.path.join(d, 'DejaVuSans.ttf')))
 pdfmetrics.registerFont(TTFont("DV", FD + "DejaVuSans.ttf"))
 pdfmetrics.registerFont(TTFont("DV-B", FD + "DejaVuSans-Bold.ttf"))
 pdfmetrics.registerFont(TTFont("DV-I", FD + "DejaVuSans-Oblique.ttf"))

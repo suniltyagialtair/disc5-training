@@ -109,7 +109,7 @@ Training uses **ArcFace** — an angular-margin classification loss over vessel 
 ### 5.2 Batch and optimisation
 
 - **Physical batch 16, gradient-accumulated to an effective batch of 64.** ArcFace does not rely on in-batch negatives, so the physical batch is purely a speed/VRAM knob; the effective batch is held at 64. (On the training card, physical 16 was measured as the fastest point; 24 was slower — memory-bandwidth-bound on the 8191-tap convolution — and 32 ran out of memory.)
-- LR `3e-4` (1-epoch warmup from `1e-4`, cosine decay toward `1e-6`), weight decay `1e-4`, gradient clip `10`.
+- LR `1e-3` (3-epoch warmup from `1e-4`, cosine decay toward `1e-6`), weight decay `1e-4`, gradient clip `10`.
 
 ### 5.3 Epoch-set data design
 Rather than a sampler, training draws from **25 pre-built "epoch-set" CSV manifests** under an *originals-preferred* policy (`per_set = 100`), rotating the set used by `(epoch − 1) mod 25 + 1`:
