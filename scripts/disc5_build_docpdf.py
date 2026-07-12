@@ -1,8 +1,10 @@
 # disc5_build_docpdf.py
-# Renders the corrected DISC5_SKANN_Technical_Documentation.md into a typeset PDF
-# with three inserted figures (architecture, pipeline, NODPAC-21 benchmark chart).
+# Renders DISC5_SKANN_Technical_Documentation.md (repo root) into a typeset PDF
+# with the four inserted figures. Paths are repo-relative: run from anywhere,
+# reads ../DISC5_SKANN_Technical_Documentation.md and ../figures relative to this script.
 
 import re
+from pathlib import Path
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.lib import colors
@@ -11,6 +13,11 @@ from reportlab.platypus import (BaseDocTemplate, Frame, PageTemplate, Paragraph,
                                 Spacer, Image, Table, TableStyle, HRFlowable)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+
+REPO = Path(__file__).resolve().parents[1]
+MD_PATH = REPO / "DISC5_SKANN_Technical_Documentation.md"
+OUT_PATH = REPO / "DISC5_SKANN_Technical_Documentation.pdf"
+FIG_DIR = REPO / "figures"
 
 # ---- fonts (DejaVu for full glyph coverage: arrows, >=, approx, etc.) ----
 FD = "/usr/share/fonts/truetype/dejavu/"
@@ -71,15 +78,14 @@ def md_table(rows, width):
     return t
 
 FIG_WIDTH_CM = {"fig3_pipeline.png": 15.2}  # default 16.4 for the rest
-FIG_DIR = "/home/claude/figures/"
 
 def build(md_path, out_path, width):
     story = []
     story.append(Spacer(1, 0.6 * cm))
-    story.append(Paragraph("DISC5 / SKANN — Technical Documentation", S["title"]))
+    story.append(Paragraph("DISC5 / SKANN \u2014 Technical Documentation", S["title"]))
     story.append(Paragraph("Passive-sonar vessel re-identification: data, preprocessing, augmentation, "
                            "architecture, training, and evaluation", S["subtitle"]))
-    story.append(Paragraph("Delivered checkpoint: <b>ft2</b> (disc5_arcface_8k_ft2_ep003.pth) · July 2026", S["subtitle"]))
+    story.append(Paragraph("Delivered checkpoint: <b>ft2</b> (disc5_arcface_8k_ft2_ep003.pth) \u00b7 July 2026", S["subtitle"]))
     story.append(Spacer(1, 0.15 * cm))
     story.append(HRFlowable(width="100%", thickness=1.1, color=NAVY, spaceAfter=8))
 
@@ -92,7 +98,7 @@ def build(md_path, out_path, width):
             cap, path = mimg.group(1), mimg.group(2)
             fn = path.split("/")[-1]
             w_cm = FIG_WIDTH_CM.get(fn, 16.4)
-            img = Image(FIG_DIR + fn)
+            img = Image(str(FIG_DIR / fn))
             scale = (w_cm * cm) / img.imageWidth
             img.drawWidth = w_cm * cm
             img.drawHeight = img.imageHeight * scale
@@ -126,21 +132,21 @@ def build(md_path, out_path, width):
             story.append(Spacer(1, 2)); story.append(md_table(rows, width)); story.append(Spacer(1, 6))
             continue
         m = re.match(r"^(\d+)\.\s+(.*)$", ln)
-        if m or ln.startswith("- ") or ln.startswith("• "):
+        if m or ln.startswith("- ") or ln.startswith("\u2022 "):
             if m:
                 bullet, text = m.group(1) + ".", m.group(2)
             else:
-                bullet, text = "•", ln[2:]
+                bullet, text = "\u2022", ln[2:]
             # absorb continuation lines (indented or plain wrap until blank/next structure)
             j = i + 1
-            while j < n and lines[j].strip() and not re.match(r"^(\d+\.\s|- |• |#|\||---$|> |!\[)", lines[j].strip()):
+            while j < n and lines[j].strip() and not re.match(r"^(\d+\.\s|- |\u2022 |#|\||---$|> |!\[)", lines[j].strip()):
                 text += " " + lines[j].strip(); j += 1
             story.append(Paragraph(inline(text), S["bullet"], bulletText=bullet))
             i = j; continue
         # normal paragraph, absorb wraps
         text = ln
         j = i + 1
-        while j < n and lines[j].strip() and not re.match(r"^(\d+\.\s|- |• |#|\||---$|> |!\[)", lines[j].strip()):
+        while j < n and lines[j].strip() and not re.match(r"^(\d+\.\s|- |\u2022 |#|\||---$|> |!\[)", lines[j].strip()):
             text += " " + lines[j].strip(); j += 1
         story.append(Paragraph(inline(text), S["body"]))
         i = j
@@ -148,13 +154,13 @@ def build(md_path, out_path, width):
     def footer(canv, doc_):
         canv.saveState()
         canv.setFont("DV", 7.5); canv.setFillColor(GREY)
-        canv.drawString(2 * cm, 1.05 * cm, "DISC5 / SKANN — Technical Documentation (ft2)")
+        canv.drawString(2 * cm, 1.05 * cm, "DISC5 / SKANN \u2014 Technical Documentation (ft2)")
         canv.drawRightString(A4[0] - 2 * cm, 1.05 * cm, f"Page {canv.getPageNumber()}")
         canv.setStrokeColor(colors.HexColor("#c7d2dd")); canv.setLineWidth(0.5)
         canv.line(2 * cm, 1.35 * cm, A4[0] - 2 * cm, 1.35 * cm)
         canv.restoreState()
 
-    doc = BaseDocTemplate(out_path, pagesize=A4,
+    doc = BaseDocTemplate(str(out_path), pagesize=A4,
                           leftMargin=2 * cm, rightMargin=2 * cm, topMargin=1.7 * cm, bottomMargin=1.8 * cm)
     fr = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id="f")
     doc.addPageTemplates([PageTemplate(id="p", frames=[fr], onPage=footer)])
@@ -162,5 +168,5 @@ def build(md_path, out_path, width):
 
 if __name__ == "__main__":
     W = A4[0] - 4 * cm
-    build("/home/claude/tdoc_canonical.md", "/home/claude/DISC5_SKANN_Technical_Documentation.pdf", W)
-    print("pdf written")
+    build(MD_PATH, OUT_PATH, W)
+    print("pdf written:", OUT_PATH)
