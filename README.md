@@ -4,7 +4,7 @@ How the DISC5 acoustic vessel re-identification model was built: the training da
 
 > **Scope.** This repository documents the SKANN architecture, training methodology, and benchmark results for the DISC5 vessel re-identification model. Contents: this README; `DISC5_SKANN_Technical_Documentation.md` and its typeset PDF; `figures/`; `results/` (benchmark evaluation of the base checkpoint); `notebooks/` (the base training notebook); and `scripts/` (evaluation and scoring harness, NODPAC-21 spot-check harness, preprocessing utilities, documentation builder).
 
-The model produced here is the **ft2** checkpoint `disc5_arcface_8k_ft2_ep003.pth` (lineage: base → ftONC → ft2). At inference only the backbone runs; the training classification head is discarded. The delivered checkpoint is a fine-tune descended from the base model documented here; the base (ep21) checkpoint is published as a release asset, and the delivered engine accepts either via `CKPT_NAME` — a one-line swap with no code change.
+The model produced here is the **ft2** checkpoint `disc5_arcface_8k_ft2_ep003.pth` (lineage: base → ftONC → ft2). At inference only the backbone runs; the training classification head is discarded. The delivered checkpoint is a fine-tune descended from the base model documented here; the base (ep21) checkpoint is published as a release asset on this repository (Releases -> v1.0), and the delivered engine accepts either via `CKPT_NAME` — a one-line swap with no code change.
 
 > **Companion repository:** the delivered application — installing, enrolling and identifying — is in **`disc5-reid`**. This README covers only how the model was trained.
 
