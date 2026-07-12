@@ -1,10 +1,10 @@
-# disc5-training — SKANN Vessel Re-Identification (data, preprocessing & training)
+# disc5-training — SKANN Vessel Re-Identification (architecture, training methodology & evaluation)
 
 How the DISC5 acoustic vessel re-identification model was built: the training data, how each recording is preprocessed and why, the augmentation regime, the model architecture, the training methodology and checkpoint lineage, and the evaluation results.
 
-> **Status: under construction.** This README describes the full training / data / methodology package. Currently published: this README and `DISC5_SKANN_Technical_Documentation.md` (the combined technical reference). Training scripts, data manifests, notebooks and benchmark artefacts referenced below will be added progressively.
+> **Scope.** This repository documents the SKANN architecture, training methodology, and benchmark results for the DISC5 vessel re-identification model. Contents: this README; `DISC5_SKANN_Technical_Documentation.md` and its typeset PDF; `figures/`; `results/` (benchmark evaluation of the base checkpoint); `notebooks/` (the base training notebook); and `scripts/` (evaluation and scoring harness, NODPAC-21 spot-check harness, preprocessing utilities, documentation builder).
 
-The model produced here is the **ft2** checkpoint `disc5_arcface_8k_ft2_ep003.pth` (lineage: base → ftONC → ft2). At inference only the backbone runs; the training classification head is discarded.
+The model produced here is the **ft2** checkpoint `disc5_arcface_8k_ft2_ep003.pth` (lineage: base → ftONC → ft2). At inference only the backbone runs; the training classification head is discarded. The delivered checkpoint is a fine-tune descended from the base model documented here; the base (ep21) checkpoint is published as a release asset, and the delivered engine accepts either via `CKPT_NAME` — a one-line swap with no code change.
 
 > **Companion repository:** the delivered application — installing, enrolling and identifying — is in **`disc5-reid`**. This README covers only how the model was trained.
 
@@ -57,9 +57,9 @@ Each 5-second segment is **z-normalised** (zero mean, unit variance) in the time
 ### 2.4 Build order
 The pipeline is a fixed three-step sequence, each step reading the frozen output of the previous one:
 
-1. **Resample & arrange** — every source down to 8 kHz mono, arranged by recording (`disc5_resample_arrange.py`).
-2. **Freeze the split** — the hull-disjoint train/validation split is decided and **written to file before any segmentation** (`disc5_freeze_split.py`), so every downstream step reads the same frozen assignment. (Freezing before segmenting is what guarantees no validation hull can leak into training through a segment or an augmented copy.)
-3. **Segment & augment** — segment into 5 s windows, z-normalise, and (train clips only) write the pre-computed augmented copies (`disc5_segment_augment.py`).
+1. **Resample & arrange** — every source down to 8 kHz mono, arranged by recording (`disc5_resample_arrange.py`; integrity check in `disc5_verify_resample.py`).
+2. **Freeze the split** — the hull-disjoint train/validation split is decided and **written to file before any segmentation**, so every downstream step reads the same frozen assignment. (Freezing before segmenting is what guarantees no validation hull can leak into training through a segment or an augmented copy.)
+3. **Segment & augment** — segment into 5 s windows, z-normalise, and (train clips only) write the pre-computed augmented copies.
 
 ---
 
@@ -140,7 +140,7 @@ The broader ONC dose in ft2 did **not** materially lift *unseen cross-encounter*
 
 ## 6. Evaluation
 
-Two evaluations matter: the **target-hardware spot-check** (NODPAC-21) and the **honest cross-passage number** (IARA). Figures below are from the ft2 all-benchmark comparison (`disc5_arcface_8k_allbench_compare__ft2.json`); metrics are rank-1 (correct hull is the single top match), AUC (probability a same-vessel pair out-scores the nearest different vessel), and median rank of the genuine match.
+Two evaluations matter: the **target-hardware spot-check** (NODPAC-21) and the **honest cross-passage number** (IARA). Figures below are from the ft2 all-benchmark evaluation; metrics are rank-1 (correct hull is the single top match), AUC (probability a same-vessel pair out-scores the nearest different vessel), and median rank of the genuine match.
 
 ### 6.1 NODPAC-21 (target hardware, half-split protocol)
 The clip is split in half — gallery = first half, query = second half — and scored under four increasingly realistic conditions. **This is a smoke test, not a true cross-passage result**, because the two halves share the same channel and speed; it is reported here as a hardware sanity check, with the honest cross-passage number given in §6.2.
@@ -166,15 +166,29 @@ On real cross-passage queries over held-out IARA hulls (115 queries), the correc
 
 ---
 
-## 7. Pipeline scripts
+## 7. Repository scripts
 
 | File | Role |
 |---|---|
-| `disc5_resample_arrange.py` | Step 1 — resample all sources to 8 kHz mono, arrange by recording |
-| `disc5_freeze_split.py` | Step 2 — freeze the hull-disjoint train/val split before segmentation |
-| `disc5_segment_augment.py` | Step 3 — segment to 5 s windows, z-normalise, pre-compute augmentation |
-| `disc5_build_epoch_sets*.py` | Build the 25 epoch-set manifests (originals-preferred) |
-| `disc5_score_allbench_tonal.py` | LOFAR-tonal scoring harness (TPSW whitener) |
+| `scripts/disc5_resample_arrange.py` | Resample all sources to 8 kHz mono, arrange by recording |
+| `scripts/disc5_verify_resample.py` | Integrity check on the resampled tree |
+| `scripts/disc5_extract_tonals.py` | LOFAR tonal-line extraction (TPSW whitener) |
+| `scripts/disc5_score_allbench_tonal.py` | LOFAR-tonal scoring harness across benchmarks |
+| `scripts/disc5_eval_train_retrieval.py` | Retrieval metrics on training hulls |
+| `scripts/disc5_eval_val_retrieval.py` | Retrieval metrics on held-out validation hulls |
+| `scripts/disc5_eval_val_persource.py` | Per-source validation breakdown |
+| `scripts/disc5_score_onc_eval.py` | ONC benchmark scoring (SKANN embeddings) |
+| `scripts/disc5_score_onc_tonal.py` | ONC benchmark scoring (LOFAR-tonal) |
+| `scripts/disc5_score_onc_holdout.py` | Held-out ONC vessel scoring (the unseen-vessel verdict) |
+| `scripts/disc5_compare_onc_results.py` | SKANN vs tonal comparison tables |
+| `scripts/disc5_eval_onc_gallery_depth.py` | Gallery-depth sensitivity analysis |
+| `scripts/disc5_prep_navy.py` | NODPAC-21 half-split gallery/query condition preparation |
+| `scripts/disc5_navy_tensor_manifest.py` | NODPAC-21 tensor manifest builder |
+| `scripts/disc5_score_navy_tonal.py` | NODPAC-21 LOFAR-tonal scoring |
+| `scripts/disc5_report_navy.py` | NODPAC-21 result tables |
+| `scripts/disc5_build_docpdf.py` | Rebuild the technical documentation PDF from the canonical `.md` |
+
+Scoring and evaluation scripts expect local data manifests and tensor trees; they document the scoring logic and reproduce the published tables given those inputs. The NODPAC-21 manifests (`manifests/disc5_navy_manifest.csv`, `manifests/disc5_navy_tensor_manifest.csv`) describe the half-split spot-check inputs.
 
 ---
 
