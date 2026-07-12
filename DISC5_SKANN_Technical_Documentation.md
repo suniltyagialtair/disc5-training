@@ -159,7 +159,7 @@ The broader ONC dose in ft2 did **not** materially lift *unseen cross-encounter*
 
 ## 7. Evaluation
 
-Two evaluations matter: the **target-hardware spot-check** (NODPAC-21) and the **honest cross-passage number** (IARA). Figures below are from the ft2 all-benchmark comparison (`disc5_arcface_8k_allbench_compare__ft2.json`); metrics are rank-1 (correct hull is the single top match), AUC (probability a same-vessel pair out-scores the nearest different vessel), and median rank of the genuine match.
+Two evaluations matter: the **target-hardware spot-check** (NODPAC-21) and the **honest cross-passage number** (IARA). Figures below are from the ft2 all-benchmark evaluation; metrics are rank-1 (correct hull is the single top match), AUC (probability a same-vessel pair out-scores the nearest different vessel), and median rank of the genuine match.
 
 ### 7.1 NODPAC-21 (target hardware, half-split protocol)
 The clip is split in half — gallery = first half, query = second half — and scored under four increasingly realistic conditions. **This is a smoke test, not a true cross-passage result**, because the two halves share the same channel and speed; it is reported here as a hardware sanity check, with the honest cross-passage number given in §7.2.
@@ -173,7 +173,7 @@ The clip is split in half — gallery = first half, query = second half — and 
 
 The pattern is the story: on clean audio SKANN matches or beats the tonal method; the gap **widens under noise**; and under Doppler the tonal method **collapses** (its absolute line frequencies shift, so line-matching fails) while SKANN's learned invariance largely holds. The two methods have **near-orthogonal failure modes** — where one fails the other often does not — which is why they are shown side by side. A z-score fusion helps on clean/noise but *hurts* under speed, so **fusion is not shipped**; agreement is surfaced instead.
 
-![Figure 4 — NODPAC-21 half-split spot-check, four conditions: rank-1 and open-set AUC, SKANN ft2 vs LOFAR-tonal. Source: disc5_arcface_8k_allbench_compare__ft2.json.](figures/fig4_nodpac21.png)
+![Figure 4 — NODPAC-21 half-split spot-check, four conditions: rank-1 and open-set AUC, SKANN ft2 vs LOFAR-tonal.](figures/fig4_nodpac21.png)
 
 ### 7.2 IARA validation (real cross-passage, the honest number)
 On real cross-passage queries over held-out IARA hulls (115 queries), the correct vessel is the single top match **less than half the time**, but is usually within the top few:
