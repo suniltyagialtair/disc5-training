@@ -1,0 +1,18 @@
+﻿# never commit — reads the ft2 results JSON (not distributed)
+disc5_make_docfigs.py
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# data / model artefacts — never in the repo tree
+*.pth
+*.npy
+*.npz
+*.wav
+*.tar
+
+# OS
+Thumbs.db
+desktop.ini
