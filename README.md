@@ -188,7 +188,7 @@ On real cross-passage queries over held-out IARA hulls (115 queries), the correc
 | `scripts/disc5_report_navy.py` | NODPAC-21 result tables |
 | `scripts/disc5_build_docpdf.py` | Rebuild the technical documentation PDF from the canonical `.md` |
 
-Scoring and evaluation scripts expect local data manifests and tensor trees; they document the scoring logic and reproduce the published tables given those inputs. The NODPAC-21 manifests (`manifests/disc5_navy_manifest.csv`, `manifests/disc5_navy_tensor_manifest.csv`) describe the half-split spot-check inputs.
+Scoring and evaluation scripts expect local data manifests and tensor trees; they document the scoring logic and reproduce the published tables given those inputs. The NODPAC-21 manifests (`manifests/disc5_navy_manifest.csv`, `manifests/disc5_navy_tensor_manifest.csv`) describe the half-split spot-check inputs. These are the only manifests distributed with this repository; training-data manifests (splits, epoch sets, tensor indices) are not distributed.
 
 ---
 
