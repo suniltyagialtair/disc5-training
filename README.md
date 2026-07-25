@@ -58,7 +58,7 @@ Each 5-second segment is **z-normalised** (zero mean, unit variance) in the time
 The pipeline is a fixed three-step sequence, each step reading the frozen output of the previous one:
 
 1. **Resample & arrange** — every source down to 8 kHz mono, arranged by recording (`disc5_resample_arrange.py`; integrity check in `disc5_verify_resample.py`).
-2. **Freeze the split** — the hull-disjoint train/validation split is decided and **written to file before any segmentation**, so every downstream step reads the same frozen assignment. (Freezing before segmenting is what guarantees no validation hull can leak into training through a segment or an augmented copy.)
+2. **Freeze the split** — the hull-disjoint train/validation split is decided and **written to file before any segmentation**, so every downstream step reads the same frozen assignment (`disc5_freeze_split.py`). (Freezing before segmenting is what guarantees no validation hull can leak into training through a segment or an augmented copy.)
 3. **Segment & augment** — segment into 5 s windows, z-normalise, and (train clips only) write the pre-computed augmented copies.
 
 ---
@@ -172,6 +172,8 @@ On real cross-passage queries over held-out IARA hulls (115 queries), the correc
 |---|---|
 | `scripts/disc5_resample_arrange.py` | Resample all sources to 8 kHz mono, arrange by recording |
 | `scripts/disc5_verify_resample.py` | Integrity check on the resampled tree |
+| `scripts/disc5_freeze_split.py` | Hull-disjoint train/validation split; writes the frozen split and the per-recording manifest that all later stages read |
+| `scripts/disc5_build_tensor_tar.py` | Pack the tensor tree and index into one verified transfer archive (SHA-256) |
 | `scripts/disc5_extract_tonals.py` | LOFAR tonal-line extraction (TPSW whitener) |
 | `scripts/disc5_score_allbench_tonal.py` | LOFAR-tonal scoring harness across benchmarks |
 | `scripts/disc5_eval_train_retrieval.py` | Retrieval metrics on training hulls |
@@ -188,7 +190,7 @@ On real cross-passage queries over held-out IARA hulls (115 queries), the correc
 | `scripts/disc5_report_navy.py` | NODPAC-21 result tables |
 | `scripts/disc5_build_docpdf.py` | Rebuild the technical documentation PDF from the canonical `.md` |
 
-Scoring and evaluation scripts expect local data manifests and tensor trees; they document the scoring logic and reproduce the published tables given those inputs. The NODPAC-21 manifests (`manifests/disc5_navy_manifest.csv`, `manifests/disc5_navy_tensor_manifest.csv`) describe the half-split spot-check inputs. These are the only manifests distributed with this repository; training-data manifests (splits, epoch sets, tensor indices) are not distributed.
+Scoring and evaluation scripts expect local data manifests and tensor trees; they document the scoring logic and reproduce the published tables given those inputs. The NODPAC-21 manifests (`manifests/disc5_navy_manifest.csv`, `manifests/disc5_navy_tensor_manifest.csv`) describe the half-split spot-check inputs. These are the only manifests distributed with this repository; training-data manifests (splits, epoch sets, tensor indices) are not distributed. The build-machine and training-environment layout the pipeline scripts assume is described in `DISC5_Training_Directory_Structure.md` at the repository root.
 
 ---
 
